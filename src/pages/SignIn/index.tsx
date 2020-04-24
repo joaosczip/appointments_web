@@ -38,15 +38,10 @@ const SignIn: React.FC = () => {
           password: Yup.string().required("Senha é obrigatória"),
         });
 
-<<<<<<< HEAD
         const { email, password } = await schema.validate(data, {
           abortEarly: false,
         });
-=======
-        const validated = await schema.validate(data, { abortEarly: false });
 
-        const { email, password } = validated;
->>>>>>> 13733be34d99abb61fefb02a6078fdc1cfdf8705
         signIn({ email, password });
       } catch (error) {
         const errors = getValidationErrors(error);
