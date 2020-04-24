@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useState } from "react";
+import React, { createContext, useCallback, useState, useContext } from "react";
 import api from "../services/api";
 
 interface SignInCredentials {
@@ -9,6 +9,7 @@ interface SignInCredentials {
 interface AuthContextInterface {
   user: {};
   signIn({}: SignInCredentials): Promise<void>;
+  signOut(): void;
 }
 
 interface AuthState {
@@ -16,7 +17,7 @@ interface AuthState {
   user: {};
 }
 
-export const AuthContext = createContext<AuthContextInterface>(
+const AuthContext = createContext<AuthContextInterface>(
   {} as AuthContextInterface
 );
 
@@ -46,9 +47,24 @@ export const AuthProvider: React.FC = ({ children }) => {
     setData({ token, user });
   }, []);
 
+  const signOut = useCallback(() => {
+    localStorage.removeItem("@GoBarber:token");
+    localStorage.removeItem("@GoBarber:user");
+
+    setData({} as AuthState);
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user: data.user, signIn }}>
+    <AuthContext.Provider value={{ user: data.user, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );
+};
+
+export const useAuth = (): AuthContextInterface => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth mut be used within an AuthProvider");
+  }
+  return context;
 };
