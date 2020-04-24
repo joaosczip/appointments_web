@@ -11,13 +11,18 @@ import { Container, Content, Background } from "./styles";
 import getValidationErrors from "../../utils/getValidationErrors";
 import { AuthContext } from "../../context/AuthContext";
 
+interface SignInFormData {
+  email: string;
+  password: string;
+}
+
 const SignIn: React.FC = () => {
   const formRef = useRef<FormHandles>(null);
 
   const { signIn } = useContext(AuthContext);
 
   const handleSubmit = useCallback(
-    async (data: any) => {
+    async (data: SignInFormData) => {
       try {
         formRef.current?.setErrors({});
 
@@ -28,8 +33,10 @@ const SignIn: React.FC = () => {
           password: Yup.string().required("Senha é obrigatória"),
         });
 
-        await schema.validate(data, { abortEarly: false });
-        signIn();
+        const { email, password } = await schema.validate(data, {
+          abortEarly: false,
+        });
+        signIn({ email, password });
       } catch (error) {
         const errors = getValidationErrors(error);
         formRef.current?.setErrors(errors);
