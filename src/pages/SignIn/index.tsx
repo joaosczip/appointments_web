@@ -16,11 +16,6 @@ interface SignInFormData {
   password: string;
 }
 
-interface SignInFormData {
-  email: string;
-  password: string;
-}
-
 const SignIn: React.FC = () => {
   const formRef = useRef<FormHandles>(null);
 
@@ -44,8 +39,12 @@ const SignIn: React.FC = () => {
 
         signIn({ email, password });
       } catch (error) {
-        const errors = getValidationErrors(error);
-        formRef.current?.setErrors(errors);
+        if (error instanceof Yup.ValidationError) {
+          const errors = getValidationErrors(error);
+          formRef.current?.setErrors(errors);
+        }
+
+        // disparar toast
       }
     },
     [signIn]
