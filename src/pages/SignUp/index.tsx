@@ -3,35 +3,69 @@ import { FiArrowLeft, FiMail, FiLock, FiUser } from "react-icons/fi";
 import { FormHandles } from "@unform/core";
 import { Form } from "@unform/web";
 import * as Yup from "yup";
-import { Link } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
+import api from "../../services/api";
 
 import logoImg from "../../assets/logo.svg";
 import Input from "../../components/Input";
 import Button from "../../components/Button";
 import { Container, Content, Background } from "./styles";
 import getValidationErrors from "../../utils/getValidationErrors";
+import { useToast } from "../../hooks/toast";
+
+interface SignUpFormData {
+  name: string;
+  email: string;
+  password: string;
+}
 
 const SignUp: React.FC = () => {
   const formRef = useRef<FormHandles>(null);
 
-  const handleSubmit = useCallback(async (data: any) => {
-    try {
-      formRef.current?.setErrors({});
+  const history = useHistory();
+  const { addToast } = useToast();
 
-      const schema = Yup.object().shape({
-        name: Yup.string().required("Nome obrigatório"),
-        email: Yup.string()
-          .required("E-mail obrigatório")
-          .email("Digite um E-mail válido"),
-        password: Yup.string().min(6, "No mínimo 6 digitos"),
-      });
+  const handleSubmit = useCallback(
+    async (data: SignUpFormData) => {
+      try {
+        formRef.current?.setErrors({});
 
-      await schema.validate(data, { abortEarly: false });
-    } catch (error) {
-      const errors = getValidationErrors(error);
-      formRef.current?.setErrors(errors);
-    }
-  }, []);
+        const schema = Yup.object().shape({
+          name: Yup.string().required("Nome obrigatório"),
+          email: Yup.string()
+            .required("E-mail obrigatório")
+            .email("Digite um E-mail válido"),
+          password: Yup.string().min(6, "No mínimo 6 digitos"),
+        });
+
+        const { name, email, password } = await schema.validate(data, {
+          abortEarly: false,
+        });
+        await api.post("/users", { name, email, password });
+
+        history.push("/");
+
+        addToast({
+          type: "success",
+          title: "Cadastro realizado!",
+          description: "Você já pode fazer o seu logon no app.",
+        });
+      } catch (error) {
+        if (error instanceof Yup.ValidationError) {
+          const errors = getValidationErrors(error);
+          formRef.current?.setErrors(errors);
+          return;
+        }
+
+        addToast({
+          type: "error",
+          title: "Erro ao realizar cadastro!",
+          description: "Verifique os seus dados e tente novamente.",
+        });
+      }
+    },
+    [addToast, history]
+  );
 
   return (
     <Container>
